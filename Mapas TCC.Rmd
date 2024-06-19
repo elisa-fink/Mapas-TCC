@@ -1,0 +1,129 @@
+---
+title: "Mapas TCC"
+author: "Elisa"
+date: "`r Sys.Date()`"
+output: html_document
+---
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(gtfstools)
+
+paradas <- read_gtfs("C:/Users/CIBELE/Documents/TCC/codigos_R/arquivo-gtfs.zip")$stops
+
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+
+library(geobr)
+shape_poa<-read_municipality(code_muni = 4314902, year = 2020,
+                             simplified = FALSE, showProgress = FALSE)
+library(sf)
+shape_poa <- st_transform(shape_poa, crs = 4326)
+```
+
+### Mapa paradas POA
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(leaflet)
+leaflet(shape_poa) %>%
+  addTiles() %>%
+  addPolygons(color = "black", weight = 1, opacity = 1)%>%
+  addCircleMarkers(lng=paradas$stop_lon, lat=paradas$stop_lat, 
+                   radius = 0.1, opacity = 1, color = "blue")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library("aopdata")
+
+# baixa os dados sociodemográficos do AOP
+dados_sociodemograficos <- aopdata::read_population(
+  city = "Porto Alegre",
+  year = 2010,
+  geometry = TRUE,
+  showProgress = FALSE)
+
+
+#dados uso do solo
+dados_solo <- aopdata::read_landuse(
+  city = "Porto Alegre",
+  year = 2019,
+  geometry = TRUE,
+  showProgress = FALSE
+)
+```
+
+### Mapa densidade populacional POA
+```{r message=FALSE, warning=FALSE}
+library(viridis)
+library(ggplot2)
+#scale_fill_viridis(option= "rocket", direction = -1) +
+ggplot(dados_sociodemograficos) +
+  geom_sf(aes(fill = P001), color = NA, alpha = 0.9) +
+  scale_fill_viridis(option = "rocket", direction = -1)+
+  labs(fill = "Número de \nhabitantes (2010)") +
+  theme_void()
+#trocar 0 por NA?
+```
+
+
+### Mapa renda per capita POA
+
+```{r message=FALSE, warning=FALSE}
+library(viridis)
+library(ggplot2)
+#scale_fill_viridis(option= "rocket", direction = -1) +
+ggplot(dados_sociodemograficos) +
+  geom_sf(aes(fill = R001), color = NA, alpha = 0.9) +
+  scale_fill_viridis(option = "rocket", direction = -1)+
+  labs(fill = "Renda domiciliar\nper capta média (2010)") +
+  theme_void()
+```
+
+
+### Mapas população branca e não-branca POA
+
+```{r message=FALSE, warning=FALSE}
+library(gridExtra)
+g1<-ggplot(dados_sociodemograficos) +
+  geom_sf(aes(fill = P002), color = NA, alpha = 0.9) +
+  scale_fill_viridis(option = "rocket", direction = -1)+
+  labs(fill = "Número de habitantes") +
+  ggtitle("População branca")+
+  theme_void()
+g2<-ggplot(dados_sociodemograficos) +
+  geom_sf(aes(fill = P003+P004+P005), color = NA, alpha = 0.9) +
+  scale_fill_viridis(option = "rocket", direction = -1)+
+  labs(fill = "Número de habitantes") +
+  ggtitle("População não-branca") +
+  theme_void()
+grid.arrange(g1,g2, nrow = 1)
+```
+
+### Mapa matrículas em estabelecimento de ensino POA
+
+```{r message=FALSE, warning=FALSE}
+ggplot(dados_solo) +
+  geom_sf(aes(fill = M001), color = NA, alpha = 0.9) +
+  scale_fill_viridis(option = "rocket", direction = -1)+
+  labs(fill = "matrículas em estabelecimento\n de ensino") +
+  theme_void()
+```
+
+### Mapa quantidade de empregos POA
+
+```{r message=FALSE, warning=FALSE}
+ggplot(dados_solo) +
+  geom_sf(aes(fill = T001), color = NA, alpha = 0.9) +
+  scale_fill_viridis(option = "rocket", direction = -1)+
+  labs(fill = "Quantidade total de empregos") +
+  theme_void()
+```
+
+### Mapa quantidade total de Estabelecimentos de Saúde
+
+```{r message=FALSE, warning=FALSE}
+ggplot(dados_solo) +
+  geom_sf(aes(fill = S001), color = NA, alpha = 0.9) +
+  scale_fill_viridis(option = "rocket", direction = -1)+
+  labs(fill = "Quantidade total de\nestabelecimentos de Saúde") +
+  theme_void()
+```
+
